@@ -8,7 +8,7 @@ private:
     int maxHealth;
     int damage;
 public:
-    Fighter(const char* name, int health, int damage) : name(name), health(health), maxHealth(health), damage(damage){
+    Fighter(const char* name, int health, int damage, int maxHealth = 20) : name(name), health(health), maxHealth(health), damage(damage){
     };
     void TakeDamage(int amount) {
         health -= amount;
@@ -28,6 +28,15 @@ public:
     void PrintStatus() const {
         std::cout << name << " " << health << " " << "\n";
     }
+
+    void Heal(int amount) {
+        if (health + amount > maxHealth) {
+            health = maxHealth;
+        }
+        else {
+            health += amount;
+        }
+    }
 };
 void PrintFighter(const Fighter& fighter) {
     fighter.PrintStatus();
@@ -39,8 +48,9 @@ private:
     Fighter player;
     Fighter enemies[3];
     Fighter* currentTarget;
+    int medkits = 1;
 public:
-    Game() : player("player", 30, 8), currentTarget(nullptr),enemies{Fighter("Enemy 1", 12, 3), Fighter("Enemy 2", 18, 4), Fighter("Enemy 3", 24, 5)}
+    Game() : player("player", 20, 8), currentTarget(nullptr),enemies{Fighter("Enemy 1", 12, 3), Fighter("Enemy 2", 18, 4), Fighter("Enemy 3", 24, 5)}
     {
     }
     bool TrySelectTarget(int number, Fighter*& outTarget) {
@@ -120,6 +130,25 @@ public:
                     }
                 }
             }
+            else if (com == 3) {
+                if (currentTarget == nullptr)
+                {
+                    std::cout << "Nothing \n";
+                }
+                else if (medkits == 0){
+                    std::cout << "No kits \n";
+                }
+                else {
+                    player.Heal(8);
+                    medkits -= 1;
+                    Fighter& target = *currentTarget;
+                    target.Attack(player);
+                    if (!player.IsAlive()) {
+                        std::cout << "Lose\n";
+                        break;
+                    }
+                }
+            }
         }
     }
 };
@@ -129,8 +158,3 @@ int main(){
     game.Run();
     return 0;
 };
-
-
-
-
-
