@@ -37,40 +37,94 @@ void PrintFighter(const Fighter& fighter) {
 class Game {
 private:
     Fighter player;
-    Fighter enemy;
+    Fighter enemies[3];
+    Fighter* currentTarget;
 public:
-    Game() : player("player", 30, 8), enemy("enemy", 12, 3){
-    };
+    Game() : player("player", 30, 8), currentTarget(nullptr),enemies{Fighter("Enemy 1", 12, 3), Fighter("Enemy 2", 18, 4), Fighter("Enemy 3", 24, 5)}
+    {
+    }
+    bool TrySelectTarget(int number, Fighter*& outTarget) {
+        outTarget = nullptr;
+        if (number < 1 || number > 3) {
+            return false;
+        }
+        if (!enemies[number - 1].IsAlive()) {
+            return false;
+        }
+        outTarget = &enemies[number - 1];
+        return true;
+    }
+
+    bool AllEnemiesDefeated() const {
+        for (int i = 0; i < 3; ++i) {
+            if (enemies[i].IsAlive()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     void Run() {
         while (true) {
-            PrintFighter(player);
-            PrintFighter(enemy);
+            std::cout << "\nPlayer: ";
+            player.PrintStatus();
+
+            for (int i = 0; i < 3; ++i) {
+                if (&enemies[i] == currentTarget) {
+                    std::cout << "+ ";
+                } else {
+                    std::cout << "   ";
+                }
+                enemies[i].PrintStatus();
+            }
+
             int com;
             std::cin >> com;
+
             if (com == 0) {
                 break;
             }
+
             if (com == 1) {
-                player.Attack(enemy);
-                if (!enemy.IsAlive()) {
-                    std::cout <<"Win";
-                    break;
-                }
-                enemy.Attack(player);
-                if (!player.IsAlive()) {
-                    std::cout << "Lose";
-                    break;
+                int targetNum;
+                std::cin >> targetNum;
+                if (!TrySelectTarget(targetNum, currentTarget))
+                {
+                    std::cout << "Nothing \n";
                 }
             }
+            else if (com == 2) {
+                if (currentTarget == nullptr)
+                {
+                    std::cout << "Nothing \n";
+                }
+                else
+                {
+                    Fighter& target = *currentTarget;
+                    player.Attack(target);
 
+
+                    if (!target.IsAlive()) {
+                        currentTarget = nullptr;
+
+                        if (AllEnemiesDefeated()) {
+                            std::cout << "Win\n";
+                            break;
+                        }
+                    } else {
+                        target.Attack(player);
+                        if (!player.IsAlive()) {
+                            std::cout << "Lose\n";
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
-
 };
 
-int main()
-{
+int main(){
     Game game;
     game.Run();
     return 0;
